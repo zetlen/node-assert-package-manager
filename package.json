@@ -8,8 +8,8 @@
     "assert-package-manager": "./bin/assert-package-manager"
   },
   "scripts": {
-    "format": "prettier --write",
-    "test": "prettier -c && node test.js",
+    "format": "prettier --write .",
+    "test": "prettier -c . && node test.js",
     "preversion": "npm test"
   },
   "keywords": [
