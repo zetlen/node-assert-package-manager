@@ -1,6 +1,6 @@
 {
   "name": "assert-package-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Detect the package manager client running the current script. Detects NPM and yarn, as well as any hard executable path.",
   "main": "./assert-package-manager.js",
   "homepage": "https://github.com/zetlen/node-assert-package-manager",
