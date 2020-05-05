@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+const assertPackageManager = require("../");
+const args = process.argv.slice(2);
+if (args.length === 0) {
+  console.log(assertPackageManager.detect());
+} else {
+  assertPackageManager(args);
+}
