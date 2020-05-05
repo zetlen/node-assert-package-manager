@@ -6,18 +6,14 @@ correctly, such as a monorepo using Yarn workspaces.
 It can help your package scripts exit early if they're being invoked outside of
 the required package manager.
 
-## Install
-
-with npm: `npm install --save-dev assert-package-manager`
-
-with yarn: `yarn add --dev assert-package-manager`
-
 ## Recommended Usage
 
 In a monorepo, or any repo with `private: true`, it's safe to catch things as
 early as possible.
 Add a `preinstall` script to prevent the wrong package manager from even
 beginning to install dependencies.
+Use `npx` to dynamically install `assert-package-manager` before any other
+modules are installed.
 
 ```diff
  {
@@ -27,11 +23,8 @@ beginning to install dependencies.
    "workspaces": [
      "packages/*"
    ]
-   "devDependencies": {
-     "assert-package-manager": "*"
-   },
    "scripts": {
-+    "preinstall": "assert-package-manager yarn"
++    "preinstall": "npx assert-package-manager yarn"
    }
  }
 ```
@@ -42,7 +35,7 @@ Now, this happens when you try to `npm install`.
 $ npm install
 
 > my-yarn-only-monorepo@1.0.0 preinstall /Users/me/repo
-> assert-package-manager yarn
+> npx assert-package-manager yarn
 
 /Users/me/repo/node_modules/assert-package-manager/assert-package-manager.js:54
     throw new WrongPackageManagerError(allowed, invoked);
@@ -52,7 +45,19 @@ Error: This project can only be used with the "yarn" package manager, but it was
 invoked by "npm", which is not supported.
 ```
 
-## Usage
+## Install
+
+**Don't install this as a dependency if you're going to use it in the
+[recommended way described above](#Recommended_usage).
+Instead, run it with `npx` so that it works before dependencies are installed!**
+
+But if you insist:
+
+with npm: `npm install --save-dev assert-package-manager`
+
+with yarn: `yarn add --dev assert-package-manager`
+
+## Advanced Usage
 
 ### CLI
 
