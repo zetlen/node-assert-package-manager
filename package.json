@@ -4,10 +4,11 @@
   "description": "Detect the package manager client running the current script. Detects NPM and yarn, as well as any hard executable path.",
   "main": "./npm-is.js",
   "homepage": "https://github.com/zetlen/npm-is",
+  "repository": "github:zetlen/npm-is",
   "bin": "./bin/npm-is",
   "scripts": {
-    "format": "prettier --write .",
-    "test": "prettier -c . && node test.js",
+    "format": "npx prettier --write .",
+    "test": "npx prettier -c . && node test.js",
     "preversion": "npm test"
   },
   "keywords": [
@@ -19,8 +20,5 @@
   ],
   "author": "zetlen <zetlen@github.com",
   "license": "MIT",
-  "devDependencies": {
-    "prettier": "^2.0.5"
-  },
   "prettier": {}
 }
