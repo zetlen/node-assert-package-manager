@@ -20,6 +20,21 @@ class WrongPackageManagerError extends Error {
   }
 }
 
+function npmIs(...args) {
+  if (args.length === 0) {
+    return npmIs.detect();
+  }
+  try {
+    npmIs.assert(...args);
+    return true;
+  } catch (e) {
+    if (e instanceof WrongPackageManagerError) {
+      return false;
+    }
+    throw e;
+  }
+}
+
 const byFilename = {
   yarn: "yarn",
   "yarn.js": "yarn",
@@ -27,8 +42,8 @@ const byFilename = {
   "npm-cli.js": "npm",
 };
 
-function detectCurrentPackageManager() {
-  const execPath = assertPackageManager.EXEC_PATH;
+function detect() {
+  const execPath = npmIs.EXEC_PATH;
   if (!execPath) {
     // no package manager is running!
     return "";
@@ -38,17 +53,15 @@ function detectCurrentPackageManager() {
   return known || execPath;
 }
 
-function assertPackageManager(...expected) {
+function assert(...expected) {
   // flatten so we can accept arrays and multiple args
   const allowed = [].concat(...expected);
-  const invoked = assertPackageManager.detect();
+  const invoked = detect();
   const invalid = allowed.filter(
     (name) => typeof name !== "string" || name === ""
   );
   if (invalid.length > 0) {
-    throw new Error(
-      `Invalid values passed to assertPackageManager: ${invalid}`
-    );
+    throw new Error(`Invalid values passed to npmIs.assert(): ${invalid}`);
   }
   if (!allowed.includes(invoked)) {
     throw new WrongPackageManagerError(allowed, invoked);
@@ -56,7 +69,8 @@ function assertPackageManager(...expected) {
   return true;
 }
 
-assertPackageManager.EXEC_PATH = process.env.npm_execpath;
-assertPackageManager.detect = detectCurrentPackageManager;
+npmIs.assert = assert;
+npmIs.detect = detect;
+npmIs.EXEC_PATH = process.env.npm_execpath;
 
-module.exports = assertPackageManager;
+module.exports = npmIs;

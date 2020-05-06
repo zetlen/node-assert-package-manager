@@ -1,20 +1,17 @@
 const { execSync } = require("child_process");
 const path = require("path");
 const assert = require("assert");
-const assertPackageManager = require("./assert-package-manager");
+const npmIs = require("./npm-is");
 
 function testCli(execPath, args = "") {
-  return execSync(
-    `node ${path.resolve(__dirname, "./bin/assert-package-manager")} ${args}`,
-    {
-      stdio: "pipe",
-      env: {
-        ...process.env,
-        npm_execpath: execPath,
-      },
-      encoding: "utf8",
-    }
-  );
+  return execSync(`node ${path.resolve(__dirname, "./bin/npm-is")} ${args}`, {
+    stdio: "pipe",
+    env: {
+      ...process.env,
+      npm_execpath: execPath,
+    },
+    encoding: "utf8",
+  });
 }
 
 let numTests = 0;
@@ -23,7 +20,7 @@ const allFailed = {};
 
 function testExecPaths(execPaths, tests) {
   execPaths.forEach((execPath) => {
-    assertPackageManager.EXEC_PATH = execPath;
+    npmIs.EXEC_PATH = execPath;
     const condition = `when $npm_execpath === "${execPath}":`;
     const failures = allFailed[condition] || (allFailed[condition] = []);
     console.log(condition);
@@ -46,53 +43,44 @@ function testExecPaths(execPaths, tests) {
 
 testExecPaths(["/path/to/npm", "/path/to/node_modules/.somewhere/npm-cli.js"], {
   "detected package manager is npm": (desc) => {
-    assert.equal(assertPackageManager.detect(), "npm", desc);
+    assert.equal(npmIs.detect(), "npm", desc);
   },
   "accepts one string arg": (desc) => {
-    assert.doesNotThrow(() => assertPackageManager("npm"), desc);
+    assert.ok(npmIs("npm"), desc);
   },
   "accepts 1-length array": (desc) => {
-    assert.doesNotThrow(() => assertPackageManager(["npm"]), desc);
+    assert.ok(npmIs(["npm"]), desc);
   },
   "accepts array of clients and paths": (desc) => {
-    assert.doesNotThrow(
-      () => assertPackageManager(["npm", "yarn", "/something/else"]),
-      desc
-    );
+    assert.ok(npmIs(["npm", "yarn", "/something/else"]), desc);
   },
   "accepts multiple args of clients and paths": (desc) => {
-    assert.doesNotThrow(
-      () => assertPackageManager("npm", "yarn", "/something/else"),
-      desc
-    );
+    assert.ok(npmIs("npm", "yarn", "/something/else"), desc);
   },
-  'assertPackageManager("yarn") throws': (desc) => {
+  'npmIs.assert("yarn") throws': (desc) => {
     assert.throws(
-      () => assertPackageManager("yarn"),
+      () => npmIs.assert("yarn"),
       /can only be used with the "yarn" package manager, but it was invoked by "npm"/,
       desc
     );
   },
-  'assertPackageManager(["yarn","pnpm"]) throws with good grammar': (desc) => {
+  'npmIs.assert(["yarn","pnpm"]) throws with good grammar': (desc) => {
     assert.throws(
-      () => assertPackageManager("yarn", "pnpm"),
+      () => npmIs.assert("yarn", "pnpm"),
       /can only be used with the "yarn" or "pnpm" package managers, but it was invoked by "npm"/,
       desc
     );
   },
-  'cli "assert-package-manager" returns npm': (desc, execPath) => {
+  'cli "npm-is" returns npm': (desc, execPath) => {
     assert.equal(testCli(execPath).trim(), "npm", desc);
   },
-  'cli "assert-package-manager npm" exits clean': (desc, execPath) => {
+  'cli "npm-is npm" exits clean': (desc, execPath) => {
     assert.doesNotThrow(() => testCli(execPath, "npm"), desc);
   },
-  'cli "assert-package-manager yarn pnpm npm" exits clean': (
-    desc,
-    execPath
-  ) => {
+  'cli "npm-is yarn pnpm npm" exits clean': (desc, execPath) => {
     assert.doesNotThrow(() => testCli(execPath, "yarn pnpm npm"), desc);
   },
-  'cli "assert-package-manager yarn pnpm" errors out': (desc, execPath) => {
+  'cli "npm-is yarn pnpm" errors out': (desc, execPath) => {
     assert.throws(
       () => testCli(execPath, "yarn pnpm"),
       /can only be used with the "yarn" or "pnpm" package managers, but it was invoked by "npm"/,
@@ -103,46 +91,41 @@ testExecPaths(["/path/to/npm", "/path/to/node_modules/.somewhere/npm-cli.js"], {
 
 testExecPaths(["/Users/you/.yarn/bin/yarn", "/path/to/yarn.js"], {
   "detected package manager is yarn": (desc) => {
-    assert.equal(assertPackageManager.detect(), "yarn", desc);
+    assert.equal(npmIs.detect(), "yarn", desc);
   },
-  'assertPackageManager("yarn") is true': (desc) => {
-    assert.doesNotThrow(() => assertPackageManager("yarn"), desc);
+  'npmIs.assert("yarn") is true': (desc) => {
+    assert.doesNotThrow(() => npmIs.assert("yarn"), desc);
   },
-  'assertPackageManager(["npm", "yarn", "/something/else"]) is true': (
-    desc
-  ) => {
+  'npmIs.assert(["npm", "yarn", "/something/else"]) is true': (desc) => {
     assert.doesNotThrow(
-      () => assertPackageManager(["npm", "yarn", "/something/else"]),
+      () => npmIs.assert(["npm", "yarn", "/something/else"]),
       desc
     );
   },
-  'assertPackageManager("npm") throws': (desc) => {
+  'npmIs.assert("npm") throws': (desc) => {
     assert.throws(
-      () => assertPackageManager("npm"),
+      () => npmIs.assert("npm"),
       /can only be used with the "npm" package manager, but it was invoked by "yarn"/,
       desc
     );
   },
-  'assertPackageManager(["npm","pnpm"]) throws with good grammar': (desc) => {
+  'npmIs.assert(["npm","pnpm"]) throws with good grammar': (desc) => {
     assert.throws(
-      () => assertPackageManager("npm", "pnpm"),
+      () => npmIs.assert("npm", "pnpm"),
       /can only be used with the "npm" or "pnpm" package managers, but it was invoked by "yarn"/,
       desc
     );
   },
-  'cli "assert-package-manager" returns yarn': (desc, execPath) => {
+  'cli "npm-is" returns yarn': (desc, execPath) => {
     assert.equal(testCli(execPath).trim(), "yarn", desc);
   },
-  'cli "assert-package-manager yarn" exits clean': (desc, execPath) => {
+  'cli "npm-is yarn" exits clean': (desc, execPath) => {
     assert.doesNotThrow(() => testCli(execPath, "yarn"), desc);
   },
-  'cli "assert-package-manager yarn pnpm npm" exits clean': (
-    desc,
-    execPath
-  ) => {
+  'cli "npm-is yarn pnpm npm" exits clean': (desc, execPath) => {
     assert.doesNotThrow(() => testCli(execPath, "yarn pnpm npm"), desc);
   },
-  'cli "assert-package-manager npm" errors out': (desc, execPath) => {
+  'cli "npm-is npm" errors out': (desc, execPath) => {
     assert.throws(
       () => testCli(execPath, "npm"),
       /can only be used with the "npm" package manager, but it was invoked by "yarn"/,
@@ -156,33 +139,30 @@ testExecPaths(["/path/to/pnpm"], {
     desc,
     execPath
   ) => {
-    assert.equal(assertPackageManager.detect(), execPath, desc);
+    assert.equal(npmIs.detect(), execPath, desc);
   },
   "asserts on an unknown package manager": (desc, execPath) => {
-    assert.doesNotThrow(() => assertPackageManager(execPath, "yarn"), desc);
+    assert.doesNotThrow(() => npmIs.assert(execPath, "yarn"), desc);
   },
   "throws if unknown package manager is not matched": (desc, execPath) => {
     assert.throws(
-      () => assertPackageManager("yarn", "npm"),
+      () => npmIs.assert("yarn", "npm"),
       new RegExp(
         `can only be used with the "yarn" or "npm" package managers, but it was invoked by "${execPath}"`
       ),
       desc
     );
   },
-  'cli "assert-package-manager" returns full path': (desc, execPath) => {
+  'cli "npm-is" returns full path': (desc, execPath) => {
     assert.equal(testCli(execPath).trim(), execPath);
   },
-  'cli "assert-package-manager ${execPath}" exits clean': (desc, execPath) => {
+  'cli "npm-is ${execPath}" exits clean': (desc, execPath) => {
     assert.doesNotThrow(() => testCli(execPath, execPath), desc);
   },
-  'cli "assert-package-manager yarn ${execPath} npm" exits clean': (
-    desc,
-    execPath
-  ) => {
+  'cli "npm-is yarn ${execPath} npm" exits clean': (desc, execPath) => {
     assert.doesNotThrow(() => testCli(execPath, `yarn ${execPath} npm`), desc);
   },
-  'cli "assert-package-manager npm" errors out': (desc, execPath) => {
+  'cli "npm-is npm" errors out': (desc, execPath) => {
     assert.throws(
       () => testCli(execPath, "npm"),
       new RegExp(
@@ -195,11 +175,11 @@ testExecPaths(["/path/to/pnpm"], {
 
 testExecPaths([""], {
   "detects no package manager": (desc) => {
-    assert.equal(assertPackageManager.detect(), "", desc);
+    assert.equal(npmIs.detect(), "", desc);
   },
   "asserts no package manager": (desc) => {
     assert.throws(
-      () => assertPackageManager(["npm", "yarn", "pnpm"]),
+      () => npmIs.assert(["npm", "yarn", "pnpm"]),
       /it was invoked by "node" directly, which is not supported/,
       desc
     );

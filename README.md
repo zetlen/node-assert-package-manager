@@ -12,7 +12,7 @@ In a monorepo, or any repo with `private: true`, it's safe to catch things as
 early as possible.
 Add a `preinstall` script to prevent the wrong package manager from even
 beginning to install dependencies.
-Use `npx` to dynamically install `assert-package-manager` before any other
+Use `npx` to dynamically install `npm-is` before any other
 modules are installed.
 
 ```diff
@@ -24,7 +24,7 @@ modules are installed.
      "packages/*"
    ]
    "scripts": {
-+    "preinstall": "npx assert-package-manager yarn"
++    "preinstall": "npx npm-is yarn"
    }
  }
 ```
@@ -35,9 +35,9 @@ Now, this happens when you try to `npm install`.
 $ npm install
 
 > my-yarn-only-monorepo@1.0.0 preinstall /Users/me/repo
-> npx assert-package-manager yarn
+> npx npm-is yarn
 
-/Users/me/repo/node_modules/assert-package-manager/assert-package-manager.js:54
+/Users/me/repo/node_modules/npm-is/npm-is.js:54
     throw new WrongPackageManagerError(allowed, invoked);
     ^
 
@@ -47,44 +47,56 @@ invoked by "npm", which is not supported.
 
 ## Install
 
-**Don't install this as a dependency if you're going to use it in the
-[recommended way described above](#Recommended_usage).
-Instead, run it with `npx` so that it works before dependencies are installed!**
+**Don't install this as a dependency if you're going to use it in the**
+**[recommended way described above](#Recommended_usage).**
+
+**Instead, run it with `npx` so that it works before dependencies are installed!**
 
 But if you insist:
 
-with npm: `npm install --save-dev assert-package-manager`
+with npm: `npm install --save-dev npm-is`
 
-with yarn: `yarn add --dev assert-package-manager`
+with yarn: `yarn add --dev npm-is`
 
 ## Advanced Usage
 
 ### CLI
 
-With no arguments, `assert-package-manager` prints the current package manager.
+With no arguments, `npm-is` prints the current package manager.
 So, running it outside a package manager with no arguments, it will print
 nothing.
 Running it inside an NPM script with NPM should print `npm` to the command line.
 
-With arguments, `assert-package-manager` will take each of its arguments to be
+With arguments, `npm-is` will take each of its arguments to be
 allowed package managers.
-If the `preinstall` script is `"assert-package-manager yarn npm"`, then install
+If the `preinstall` script is `"npm-is yarn npm"`, then install
 will only succeed if the package manager in use is Yarn or NPM.
 Only `npm` and `yarn` are currently supported as shorthand.
 If you're using a custom package manager, you must know its exec path (that is,
 the value of the environment variable `$npm_execpath` when it is running
 lifecycle scripts) and pass that as an argument.
-If the `preinstall` script is `"assert-package-manager /path/to/pnpm`, then
+If the `preinstall` script is `"npm-is /path/to/pnpm`, then
 install will only succeed if `$npm_execpath` is exactly `/path/to/pnpm`.
 
 ### Node API
 
 ```js
-const assertPkgMgr = require("assert-package-manager");
-assertPkgMgr("yarn"); // throws unless Yarn is running this script
-assertPkgMgr("yarn", "npm"); // throws unless Yarn or NPM is running this script
-assertPkgMgr(["yarn", "npm", "/some/custom/one"]); // takes arrays as well
+const npmIs = require("npm-is");
 
-// use the `detect()` function to simply return the package manager running
-assertPkgMgr.detect(); // returns "npm", "yarn", or the full path to any other
+// returns true if Yarn
+npmIs("yarn");
+// returns true if Yarn or NPM
+npmIs(["yarn", "npm"]);
+// returns true if Yarn, NPM, or custom executable
+npmIs(["yarn", "npm", "/some/custom/one"]);
+
+// Throws instead of returning false
+npmIs.assert("yarn");
+npmIs.assert(["yarn", "npm"]);
+npmIs.assert(["yarn", "npm", "/some/custom/one"]);
+
+// Returns "npm" if NPM, "yarn" if Yarn,
+// empty string if no package manager,
+// or full execPath if anything else
+npmIs.detect();
 ```
